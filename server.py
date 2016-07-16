@@ -6,6 +6,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = ''
 
 db = SQLAlchemy(app)
 
+@app.route('/')
+def index():
+    return 'Index endpoint'
+
 @app.route('/admin')
 def index():
     return 'Admin endpoint for displaying results'
