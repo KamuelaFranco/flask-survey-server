@@ -28,11 +28,17 @@ class SurveyResult(db.Model):
     address = db.Column(db.String(250))
     gender = db.Column(db.String(6))
     favourite_book = db.Column(db.String(120))
-    favourite_colors = db.Column()
+    favourite_colors = db.Column(db.String(100))
 
     def __init__(self):
         self.name = name
         self.email = email
+        self.age = age
+        self.about_me = about_me
+        self.address = address
+        self.gender = gender
+        self.favourite_book = favourite_book
+        self.favourite_colors = favourite_colors
 
     def __repr__(self):
         return '<User %r>' % self.name
@@ -41,13 +47,14 @@ class SurveyResult(db.Model):
 
 @app.route('/')
 def index():
-    return 'Index endpoint'
+    return 'Endpoints: /admin, /survey'
 
 @app.route('/admin')
 def show():
     try:
+        survey_results = SurveyResult.query.all()
         return 'Admin endpoint for displaying results\n', \
-            db.session.all()
+            survey_results
     except:
         return 'Error: Could not read from database'
 
@@ -66,4 +73,5 @@ def create():
 # Start server
 
 if __name__ == '__main__':
+    #SQLAlchemy.create_all()
     app.run()
