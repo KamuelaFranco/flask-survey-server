@@ -11,7 +11,7 @@ def index():
     return 'Index endpoint'
 
 @app.route('/admin')
-def index():
+def show():
     return 'Admin endpoint for displaying results'
 
 @app.route('/survey')
@@ -19,4 +19,6 @@ def create():
     return 'Survey endpoint for POSTing survey'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    app.run()
+
+#host='0.0.0.0', port=80
