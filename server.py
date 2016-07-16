@@ -28,9 +28,10 @@ class SurveyResult(db.Model):
     address = db.Column(db.String(250))
     gender = db.Column(db.String(6))
     favourite_book = db.Column(db.String(120))
-    favourite_colors = db.Column(db.String(100))
+    favourite_colours = db.Column(db.String(100))
 
-    def __init__(self):
+    def __init__(self, name, email, age, about_me, \
+        address, gender, favourite_book, favourite_colours):
         self.name = name
         self.email = email
         self.age = age
@@ -38,7 +39,7 @@ class SurveyResult(db.Model):
         self.address = address
         self.gender = gender
         self.favourite_book = favourite_book
-        self.favourite_colors = favourite_colors
+        self.favourite_colours = favourite_colours
 
     def __repr__(self):
         return '<User %r>' % self.name
@@ -60,6 +61,9 @@ def show():
 
 @app.route('/survey')
 def create():
+    ## Looking for "Pythonic" way to conditionally check for params
+    ## and create an object with those given
+    survey_result = SurveyResult()
     try:
         if request.args.get('name'):
             db.session.add(request.args.get('name'))
@@ -73,5 +77,4 @@ def create():
 # Start server
 
 if __name__ == '__main__':
-    #SQLAlchemy.create_all()
     app.run()
