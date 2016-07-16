@@ -1,9 +1,11 @@
 from flask import Flask
+from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 
 # Server config
 
 app = Flask(__name__)
+CORS(app)
 
 try:
     app.config['SQLALCHEMY_DATABASE_URI'] = \
@@ -17,10 +19,16 @@ db = SQLAlchemy(app)
 ## Name, Email, Age, About me (block), Address, Gender (male/female)
 ## Favourite book, Favourite Colours (multiple)
 
-class Survey(db.Model):
+class SurveyResult(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False)
     email = db.Column(db.String(120), unique=True)
+    age = db.Column(db.Integer)
+    about_me = db.Column(db.String(500))
+    address = db.Column(db.String(250))
+    gender = db.Column(db.String(6))
+    favourite_book = db.Column(db.String(120))
+    favourite_colors = db.Column()
 
     def __init__(self):
         self.name = name
@@ -37,11 +45,23 @@ def index():
 
 @app.route('/admin')
 def show():
-    return 'Admin endpoint for displaying results'
+    try:
+        return 'Admin endpoint for displaying results\n', \
+            db.session.all()
+    except:
+        return 'Error: Could not read from database'
 
 @app.route('/survey')
 def create():
-    return 'Survey endpoint for POSTing survey'
+    try:
+        if request.args.get('name'):
+            db.session.add(request.args.get('name'))
+        if request.args.get('email'):
+            db.session.add(request.args.get('email'))
+    except:
+        return 'Error: Could not write to database'
+
+    return 'Data saved successfully'
 
 # Start server
 
