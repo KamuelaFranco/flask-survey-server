@@ -1,17 +1,18 @@
-from flask import Flask
+from flask import Flask, jsonify, request
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
+
+import sys
 
 # Server config
 
 app = Flask(__name__)
+
 CORS(app)
 
-try:
-    app.config['SQLALCHEMY_DATABASE_URI'] = \
-        'postgres://wwanvaxpkgkakx:GZR1rVHGdyL3t_M8LW_VYQfpHP@ec2-54-83-44-229.compute-1.amazonaws.com:5432/deibu97vueiugu'
-except:
-    print 'Error connecting to database'
+app.config['SQLALCHEMY_DATABASE_URI'] = \
+    'postgres://wwanvaxpkgkakx:GZR1rVHGdyL3t_M8LW_VYQfpHP@ec2-54-83-44-229.compute-1.amazonaws.com:5432/deibu97vueiugu'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
@@ -21,25 +22,24 @@ db = SQLAlchemy(app)
 
 class SurveyResult(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=False)
-    email = db.Column(db.String(120), unique=True)
+    name = db.Column(db.String(100))
+    email = db.Column(db.String(100))
     age = db.Column(db.Integer)
-    about_me = db.Column(db.String(500))
-    address = db.Column(db.String(250))
-    gender = db.Column(db.String(6))
-    favourite_book = db.Column(db.String(120))
+    about_me = db.Column(db.Text)
+    address = db.Column(db.Text)
+    favourite_book = db.Column(db.String(100))
     favourite_colours = db.Column(db.String(100))
+    gender = db.Column(db.Integer)
 
-    def __init__(self, name, email, age, about_me, \
-        address, gender, favourite_book, favourite_colours):
-        self.name = name
-        self.email = email
-        self.age = age
-        self.about_me = about_me
-        self.address = address
-        self.gender = gender
-        self.favourite_book = favourite_book
-        self.favourite_colours = favourite_colours
+    def __init__(self, query_params):
+        self.name = query_params.get('name', '')
+        self.email = query_params.get('email', '')
+        self.age = int(query_params.get('age', 0))
+        self.about_me = query_params.get('about_me', '')
+        self.address = query_params.get('address', '')
+        self.gender = int(query_params.get('gender', 0))
+        self.favourite_book = query_params.get('favourite_book', '')
+        self.favourite_colours = query_params.get('favourite_colours', '')
 
     def __repr__(self):
         return '<User %r>' % self.name
@@ -54,25 +54,21 @@ def index():
 def show():
     try:
         survey_results = SurveyResult.query.all()
-        return 'Admin endpoint for displaying results\n', \
-            survey_results
+        return jsonify(success=survey_results)
     except:
-        return 'Error: Could not read from database'
+        return jsonify(error='Could not read from database')
 
 @app.route('/survey')
 def create():
-    ## Looking for "Pythonic" way to conditionally check for params
-    ## and create an object with those given
-    survey_result = SurveyResult()
+    query_params = request.args.to_dict()
     try:
-        if request.args.get('name'):
-            db.session.add(request.args.get('name'))
-        if request.args.get('email'):
-            db.session.add(request.args.get('email'))
+        survey_result = SurveyResult(query_params=query_params)
+        db.session.add(survey_result)
+        db.session.commit()
+        return jsonify(success='Saved to database', params=query_params)
     except:
-        return 'Error: Could not write to database'
-
-    return 'Data saved successfully'
+        error_message = 'Could not write to database: ' + str(sys.exc_info())
+        return jsonify(error=error_message, params=query_params)
 
 # Start server
 
