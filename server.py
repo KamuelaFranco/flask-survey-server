@@ -54,9 +54,10 @@ def index():
 def show():
     try:
         survey_results = SurveyResult.query.all()
-        return jsonify(success=survey_results)
+        return jsonify(success=True, results=survey_results)
     except:
-        return jsonify(error='Could not read from database')
+        error_message = 'Could not read from database: ' + str(sys.exc_info())
+        return jsonify(error=error_message)
 
 @app.route('/survey')
 def create():
