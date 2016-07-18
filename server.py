@@ -1,14 +1,14 @@
-from flask import Flask, jsonify, request
-from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 
+import flask
+import flask_cors
 import sys
 
 # Server config
 
-app = Flask(__name__)
+app = flask.Flask(__name__)
 
-CORS(app)
+flask_cors.CORS(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = \
     'postgres://wwanvaxpkgkakx:GZR1rVHGdyL3t_M8LW_VYQfpHP@ec2-54-83-44-229.compute-1.amazonaws.com:5432/deibu97vueiugu'
@@ -44,6 +44,18 @@ class SurveyResult(db.Model):
     def __repr__(self):
         return '<User %r>' % self.name
 
+    def serialise(self):
+        return {
+            'name': self.name,
+            'email': self.email,
+            'age': self.age,
+            'about_me': self.about_me,
+            'address': self.address,
+            'gender': self.gender,
+            'favourite_book': self.favourite_book,
+            'favourite_colors': self.favourite_colours,
+        }
+
 # Routes
 
 @app.route('/')
@@ -54,22 +66,24 @@ def index():
 def show():
     try:
         survey_results = SurveyResult.query.all()
-        return jsonify(success=True, results=survey_results)
+        return flask.json.jsonify(success=True, results=[r.serialise() for r in survey_results])
     except:
-        error_message = 'Could not read from database: ' + str(sys.exc_info())
-        return jsonify(error=error_message)
+        error_message = 'Could not read from database'
+        print str(sys.exc_info())
+        return flask.json.jsonify(error=error_message)
 
 @app.route('/survey')
 def create():
-    query_params = request.args.to_dict()
+    query_params = flask.request.args.to_dict()
     try:
         survey_result = SurveyResult(query_params=query_params)
         db.session.add(survey_result)
         db.session.commit()
-        return jsonify(success='Saved to database', params=query_params)
+        return flask.json.jsonify(success=True, params=query_params)
     except:
-        error_message = 'Could not write to database: ' + str(sys.exc_info())
-        return jsonify(error=error_message, params=query_params)
+        error_message = 'Could not write to database'
+        print str(sys.exc_info())
+        return flask.json.jsonify(error=error_message)
 
 # Start server
 
