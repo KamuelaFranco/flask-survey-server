@@ -95,8 +95,15 @@ def update():
         elif prev_survey_result.is_complete:
             return flask.json.jsonify(error='Survey has already been completed')
         else:
-            # Update record
-            return flask.json.jsonify(error='Updating a record has not been implemented yet')
+            try:
+                # Update record
+                survey_result = SurveyResult(query_params=query_params)
+                db.session.add(survey_result)
+                db.session.commit()
+                return flask.json.jsonify(success=True, params=query_params)
+            except:
+                print str(sys.exc_info())
+                return flask.json.jsonify(error='Could not update record')
     return flask.json.jsonify(error='Invalid UUID or UUID not provided')
 
 # Start server
