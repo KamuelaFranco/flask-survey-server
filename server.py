@@ -1,10 +1,18 @@
 from flask_sqlalchemy import SQLAlchemy
+from uuid import UUID
 
 import flask
 import flask_cors
 import json
 import os
 import sys
+
+def validate_uuid4(uuid_string):
+    try:
+        val = UUID(uuid_string, version=4)
+    except ValueError:
+        return False
+    return val.hex == uuid_string.replace('-', '')
 
 # Server config
 app = flask.Flask(__name__)
@@ -65,9 +73,9 @@ class SurveyResult(db.Model):
 
 @app.route('/')
 def index():
-    return flask.json.jsonify(success='Server running')
+    return flask.json.jsonify(success=True, status='Server running')
 
-@app.route('/admin')
+@app.route('/admin', methods=['GET'])
 def show():
     try:
         survey_results = SurveyResult.query.all()
@@ -76,11 +84,11 @@ def show():
         print str(sys.exc_info())
         return flask.json.jsonify(error='Could not read from database')
 
-@app.route('/survey', methods=['GET'])
-def update():
-    query_params = flask.request.args.to_dict()
+@app.route('/survey', methods=['POST'])
+def create():
+    query_params = flask.request.form.to_dict()
     uuid = query_params.get('uuid')
-    if uuid and len(uuid) == 36:
+    if uuid and validate_uuid4(uuid):
         prev_survey_result = SurveyResult.query.filter_by(uuid=uuid).first()
         if prev_survey_result is None:
             # Create new record
@@ -92,18 +100,26 @@ def update():
             except:
                 print str(sys.exc_info())
                 return flask.json.jsonify(error='Could not write to database')
-        elif prev_survey_result.is_complete:
+        if prev_survey_result.is_complete:
             return flask.json.jsonify(error='Survey has already been completed')
-        else:
-            try:
-                # Update record
-                SurveyResult.query.filter_by(uuid=uuid).update(query_params)
-                db.session.commit()
-                return flask.json.jsonify(success=True, params=query_params)
-            except:
-                print str(sys.exc_info())
-                return flask.json.jsonify(error='Could not update record')
     return flask.json.jsonify(error='Invalid UUID or UUID not provided')
+
+@app.route('/survey', methods=['PUT'])
+def update():
+    query_params = flask.request.form.to_dict()
+    uuid = query_params.get('uuid')
+    if uuid and validate_uuid4(uuid):
+        prev_survey_result = SurveyResult.query.filter_by(uuid=uuid).first()
+        if prev_survey_result is None:
+            return flask.json.jsonify(error='Requested survey cannot be found', uuid=uuid)
+        try:
+            # Update record
+            SurveyResult.query.filter_by(uuid=uuid).update(query_params)
+            db.session.commit()
+            return flask.json.jsonify(success=True, params=query_params)
+        except:
+            print str(sys.exc_info())
+            return flask.json.jsonify(error='Could not update record')
 
 # Start server
 if __name__ == '__main__':
