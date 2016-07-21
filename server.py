@@ -97,8 +97,7 @@ def update():
         else:
             try:
                 # Update record
-                survey_result = SurveyResult(query_params=query_params)
-                db.session.add(survey_result)
+                prev_survey_result.update(query_params)
                 db.session.commit()
                 return flask.json.jsonify(success=True, params=query_params)
             except:
