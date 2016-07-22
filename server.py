@@ -86,12 +86,11 @@ def show():
 
 @app.route('/survey', methods=['POST'])
 def create():
-    query_params = flask.request.form.to_dict()
+    query_params = flask.request.form
     uuid = query_params.get('uuid')
     if uuid and validate_uuid4(uuid):
         prev_survey_result = SurveyResult.query.filter_by(uuid=uuid).first()
         if prev_survey_result is None:
-            # Create new record
             try:
                 survey_result = SurveyResult(query_params=query_params)
                 db.session.add(survey_result)
@@ -101,25 +100,29 @@ def create():
                 print str(sys.exc_info())
                 return flask.json.jsonify(error='Could not write to database')
         if prev_survey_result.is_complete:
-            return flask.json.jsonify(error='Survey has already been completed')
+            return flask.json.jsonify(error='Survey has already been completed', uuid=uuid)
+        if prev_survey_result is not None:
+            return flask.json.jsonify(error='Records are updated at this endpoint with PUT')
     return flask.json.jsonify(error='Invalid UUID or UUID not provided')
 
 @app.route('/survey', methods=['PUT'])
 def update():
-    query_params = flask.request.form.to_dict()
+    query_params = flask.request.form
     uuid = query_params.get('uuid')
     if uuid and validate_uuid4(uuid):
         prev_survey_result = SurveyResult.query.filter_by(uuid=uuid).first()
         if prev_survey_result is None:
             return flask.json.jsonify(error='Requested survey cannot be found', uuid=uuid)
+        if prev_survey_result.is_complete:
+            return flask.json.jsonify(error='Survey has already been completed', uuid=uuid)
         try:
-            # Update record
             SurveyResult.query.filter_by(uuid=uuid).update(query_params)
             db.session.commit()
             return flask.json.jsonify(success=True, params=query_params)
         except:
             print str(sys.exc_info())
             return flask.json.jsonify(error='Could not update record')
+    return flask.json.jsonify(error='Invalid UUID or UUID not provided')
 
 # Start server
 if __name__ == '__main__':
