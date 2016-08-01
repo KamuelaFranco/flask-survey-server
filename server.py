@@ -87,7 +87,7 @@ def show():
 @app.route('/survey', methods=['POST'])
 def create():
     query_params = flask.request.form
-    uuid = query_params.get('uuid')
+    uuid = str(query_params.get('uuid'))
     if uuid and validate_uuid4(uuid):
         prev_survey_result = SurveyResult.query.filter_by(uuid=uuid).first()
         if prev_survey_result is None:
