@@ -118,7 +118,7 @@ def create():
 
 @app.route('/survey', methods=['PUT'])
 def update():
-    query_params = flask.request.form
+    query_params = flask.request.get_json(force=True)
     uuid = query_params.get('uuid')
     if uuid and validate_uuid4(uuid):
         prev_survey_result = SurveyResult.query.filter_by(uuid=uuid).first()
