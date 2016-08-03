@@ -3,11 +3,9 @@ from uuid import UUID
 
 import flask
 import flask_cors
-# import ipdb
 import json
 import os
 import sys
-import traceback
 
 def validate_uuid4(uuid_string):
     try:
@@ -45,23 +43,15 @@ class SurveyResult(db.Model):
 
     def __init__(self, query_params):
         self.name = query_params.get('name', '')
-        #print 'name', self.name
         self.email = query_params.get('email' , '')
         self.age = int(query_params.get('age', 0))
-        #print self.age
         self.about_me = query_params.get('about_me', '')
         self.address = query_params.get('address', '')
-        #print 'address', self.address
         self.gender = int(query_params.get('gender', 0))
-        #print 'gender', self.gender
         self.favourite_book = query_params.get('favourite_book', '')
-        #print 'fav book', self.favourite_book
         self.favourite_colours = query_params.get('favourite_colours', '')
-        #print 'fav colours', self.favourite_colours
         self.uuid = query_params.get('uuid', '')
-        #print 'uuid', self.uuid
         self.is_complete = query_params.get('is_complete', False)
-        #print 'is_complete', self.is_complete
 
     def __repr__(self):
         return '<User %r>' % self.name
@@ -91,7 +81,7 @@ def show():
         survey_results = SurveyResult.query.all()
         return flask.json.jsonify(success=True, results=[r.serialise() for r in survey_results])
     except:
-        print str(sys.exc_info())
+        print sys.exc_info()
         return flask.json.jsonify(error='Could not read from database')
 
 @app.route('/survey', methods=['POST'])
@@ -107,7 +97,6 @@ def create():
                 db.session.commit()
                 return flask.json.jsonify(success=True, params=query_params)
             except:
-                traceback.print_stack()
                 print sys.exc_info()
                 return flask.json.jsonify(error='Could not write to database')
         if prev_survey_result.is_complete:
@@ -131,7 +120,7 @@ def update():
             db.session.commit()
             return flask.json.jsonify(success=True, params=query_params)
         except:
-            print str(sys.exc_info())
+            print sys.exc_info()
             return flask.json.jsonify(error='Could not update record')
     return flask.json.jsonify(error='Invalid UUID or UUID not provided')
 
