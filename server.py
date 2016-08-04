@@ -42,16 +42,16 @@ class SurveyResult(db.Model):
     is_complete = db.Column(db.Boolean)
 
     def __init__(self, query_params):
-        self.name = query_params.get('name', '')
-        self.email = query_params.get('email' , '')
+        self.name = str(query_params.get('name', ''))
+        self.email = str(query_params.get('email' , ''))
         self.age = int(query_params.get('age', 0))
-        self.about_me = query_params.get('about_me', '')
-        self.address = query_params.get('address', '')
+        self.about_me = str(query_params.get('about_me', ''))
+        self.address = str(query_params.get('address', ''))
         self.gender = int(query_params.get('gender', 0))
-        self.favourite_book = query_params.get('favourite_book', '')
-        self.favourite_colours = query_params.get('favourite_colours', '')
-        self.uuid = query_params.get('uuid', '')
-        self.is_complete = query_params.get('is_complete', False)
+        self.favourite_book = str(query_params.get('favourite_book', ''))
+        self.favourite_colours = str(query_params.get('favourite_colours', ''))
+        self.uuid = str(query_params.get('uuid', ''))
+        self.is_complete = bool(query_params.get('is_complete', False))
 
     def __repr__(self):
         return '<User %r>' % self.name
@@ -65,7 +65,7 @@ class SurveyResult(db.Model):
             'address': self.address,
             'gender': self.gender,
             'favourite_book': self.favourite_book,
-            'favourite_colors': self.favourite_colours,
+            'favourite_colours': self.favourite_colours,
             'is_complete': self.is_complete
         }
 
